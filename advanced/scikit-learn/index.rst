@@ -449,11 +449,6 @@ Now we can visualize the (transformed) iris dataset!
    :scale: 50
    :align: center
 
-PCA is not just useful for visualization of high dimensional
-datasets. It can also be used as a preprocessing step to help speed up
-supervised methods that are not computationally efficient with high
-dimensions.
-
 
 You can also try to visualize the digits dataset ...
 
@@ -462,6 +457,13 @@ And there are manifold learning algorithms that do a better job
 .. image:: plot_lle_digits_5.png
    :scale: 50
    :align: center
+
+PCA is not just useful for visualization of high dimensional
+datasets. It can also be used as a preprocessing step to help speed up
+supervised methods that are not computationally efficient with high
+dimensions.
+
+
 
 Putting it all together: face recognition
 =========================================
@@ -485,13 +487,16 @@ classification.
     
     ## original shape of images: 50, 37
     """
-    
     import numpy as np
+    import pylab as pl
     from scikits.learn import cross_val, datasets, decomposition, svm
     
     # ..
     # .. load data ..
     lfw_people = datasets.fetch_lfw_people(min_faces_per_person=70, resize=0.4)
+    perm = np.random.permutation(lfw_people.target.size)
+    lfw_people.data = lfw_people.data[perm]
+    lfw_people.target = lfw_people.target[perm]
     faces = np.reshape(lfw_people.data, (lfw_people.target.shape[0], -1))
     train, test = iter(cross_val.StratifiedKFold(lfw_people.target, k=4)).next()
     X_train, X_test = faces[train], faces[test]
@@ -511,7 +516,7 @@ classification.
 
     # ..
     # .. predict on new images ..
-    for i in range(1, 10):
+    for i in range(10):
         print lfw_people.target_names[clf.predict(X_test_pca[i])[0]]
         _ = pl.imshow(X_test[i].reshape(50, 37), cmap=pl.cm.gray)
         _ = raw_input()
@@ -521,6 +526,68 @@ classification.
 
 Full code: :download:`faces.py`
 
+
+
+Linear model: from regression to sparsity
+==========================================
+
+.. topic:: Diabetes dataset
+
+    The diabetes dataset consists of 10 physiological variables (age,
+    sex, weight, blood pressure) measure on 442 patients, and an
+    indication of disease progression after one year::
+
+        >>> diabetes = datasets.load_diabetes()
+        >>> diabetes_X_train = diabetes.data[:-20]
+        >>> diabetes_X_test  = diabetes.data[-20:]
+        >>> diabetes_y_train = diabetes.target[:-20]
+        >>> diabetes_y_test  = diabetes.target[-20:]
+    
+    The task at hand is to predict disease prediction from physiological
+    variables. 
+
+
+Sparse models
++++++++++++++
+
+To improve the conditioning of the problem (uninformative variables,
+mitigate the curse of dimensionality, as a feature selection
+preprocessing, etc.), it would be interesting to select only the
+informative features and set non-informative ones to 0. This
+penalization approach, called **Lasso**, can set some coefficients to
+zero.  Such methods are called **sparse method**, and sparsity can be
+seen as an application of Occam's razor: prefer simpler models to
+complex ones.
+
+:: 
+
+    >>> from scikits.learn import linear_model
+    >>> regr = linear_model.Lasso(alpha=.3)
+    >>> regr.fit(diabetes_X_train, diabetes_y_train)
+    >>> regr.coef_ # very sparse coefficients
+    array([   0.        ,   -0.        ,  497.34075682,  199.17441034,
+             -0.        ,   -0.        , -118.89291545,    0.        ,
+            430.9379595 ,    0.        ])
+    >>> regr.score(diabetes_X_test, diabetes_y_test)
+    0.55108354530029802
+
+being the score very similar to linear regression (Least Squares)::
+
+    >>> lin = linear_model.LinearRegression()
+    >>> lin.fit(diabetes_X_train, diabetes_y_train)
+    LinearRegression(fit_intercept=True, normalize=False, overwrite_X=False)
+    >>> lin.score(diabetes_X_test, diabetes_y_test)
+    0.58507530226905724
+
+.. topic:: **Different algorithms for a same problem**
+
+    Different algorithms can be used to solve the same mathematical
+    problem. For instance the `Lasso` object in the `scikits.learn`
+    solves the lasso regression using a *coordinate descent* method, that
+    is efficient on large datasets. However, the `scikits.learn` also
+    provides the `LassoLARS` object, using the *LARS* which is very
+    efficient for problems in which the weight vector estimated is very
+    sparse, that is problems with very few observations.
 
 
 ============================================================
@@ -551,26 +618,11 @@ estimator during the construction and exposes an estimator API::
     >>> clf.best_estimator.gamma
     0.00059948425031894088
 
-    >>> # Prediction performance on test set is not as good as on train set
-    >>> clf.score(X_digits[1000:], y_digits[1000:])
-    0.96110414052697613
-
 
 By default the `GridSearchCV` uses a 3-fold cross-validation. However, if
 it detects that a classifier is passed, rather than a regressor, it uses
 a stratified 3-fold.
 
-.. topic:: Nested cross-validation
-
-    ::
-
-        >>> cross_val.cross_val_score(clf, X_digits, y_digits)
-
-    Two cross-validation loops are performed in parallel: one by the
-    GridSearchCV estimator to set `gamma`, the other one by
-    `cross_val_score` to measure the prediction performance of the
-    estimator. The resulting scores are unbiased estimates of the
-    prediction score on new data.
 
 
 Cross-validated estimators
