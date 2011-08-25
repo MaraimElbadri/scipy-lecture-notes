@@ -13,7 +13,7 @@ learning frameworks available for Python:
 .. |mlpy| image:: mlpy_logo.png
    :scale: 70   
 
-.. |mymvpa| image:: pymvpa_logo.jpg
+.. |pymvpa| image:: pymvpa_logo.jpg
    :scale: 50   
 
 .. |orange| image:: orange-logo-w.png
@@ -24,7 +24,7 @@ learning frameworks available for Python:
 
 .. only:: html
 
-    .. centered:: |mdp|  |mlpy|  |orange| |skl|
+    .. centered:: |mdp|  |mlpy| |pymvpa|  |orange| |skl| 
 
 .. only:: latex 
 
@@ -91,9 +91,8 @@ It is made of 150 observations of irises, each described by the 4
 features mentioned earlier.
 
 
-The information about the class of each observation is stored in the
-target attribute of the dataset. This is an integer 1D array of length
-``n_samples``:
+The class of each observation is stored in the target attribute of the
+dataset. This is an integer 1D array of length ``n_samples``:
 
     >>> iris.target.shape
     (150,)
@@ -109,7 +108,7 @@ target attribute of the dataset. This is an integer 1D array of length
         :align: right
 
     The digits dataset is made of 1797 images, where each one is a 8x8
-    pixel image representing a hand-written digits ::
+    pixel image representing a hand-written digit ::
 
         >>> digits = datasets.load_digits()
         >>> digits.images.shape
@@ -118,8 +117,8 @@ target attribute of the dataset. This is an integer 1D array of length
         >>> pl.imshow(digits.images[0], cmap=pl.cm.gray_r) #doctest: +ELLIPSIS
         <matplotlib.image.AxesImage object at ...>
 
-    To use this dataset with the scikit, we transform each 8x8 image in a
-    feature vector of length 64 ::
+    To use this dataset with the scikit, we transform each 8x8 image
+    into a vector of length 64 ::
 
         >>> data = digits.images.reshape((digits.images.shape[0], -1))
 
@@ -129,7 +128,7 @@ target attribute of the dataset. This is an integer 1D array of length
 Learning and Predicting
 +++++++++++++++++++++++
 
-Now that we've got some data, we would like to learn from the data and
+Now that we've got some data, we would like to learn from it and
 predict on new one. In ``scikit-learn``, we learn from existing
 data by creating an ``estimator`` and calling its ``fit(X, Y)`` method.
 
@@ -150,7 +149,7 @@ And it can be used to predict the most likely outcome on unseen data:
 
 
 
-Supervised learning
+Classification
 ===================
 
 
@@ -182,6 +181,14 @@ observation, take the label of the closest learned observation.
    When experimenting with learning algorithm, it is important not to
    test the prediction of an estimator on the data used to fit the
    estimator.
+
+   ::
+
+       >>> perm = np.random.permutation(iris.target.size)
+       >>> iris.data = iris.data[perm]
+       >>> iris.target = iris.target[perm]
+       >>> knn.fit(iris.data[:100], iris.target[:100]
+       >>> knn.score(iris.data[100:], iris.target[100:])
 
 
 
@@ -394,7 +401,7 @@ The simplest clustering algorithm is the k-means.
 
 
 Dimension Reduction with Principal Component Analysis
-+++++++++++++++++++++++++++++++++++++++++++++++++++++
+=====================================================
 
 
 
@@ -447,8 +454,8 @@ dimensions.
 
 
 
-Putting it all together : face recognition with Support Vector Machines
-=======================================================================
+Putting it all together: face recognition
+=========================================
 
 An example showcasing face recognition using Principal Component
 Analysis for dimension reduction and Support Vector Machines for
@@ -506,3 +513,22 @@ classification.
 Full code: :download:`faces.py`
 
 
+
+Available in the next release ...
+=================================
+
+
+Manifold learning
++++++++++++++++++
+
+Manifold learning is an approach to nonlinear dimensionality
+reduction. Algorithms for this task are based on the idea that the
+dimensionality of many data sets is only artificially high.
+
+.. image:: plot_compare_methods_1.png
+   :scale: 50
+   :align: center
+
+
+
+ 
