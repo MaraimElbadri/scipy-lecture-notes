@@ -163,6 +163,8 @@ observation, take the label of the closest learned observation.
    :scale: 90
    :align: right
 
+Internally uses the BallTree algorithm.
+
 **KNN (k nearest neighbors) classification example**:
 
 ::
@@ -228,7 +230,7 @@ scikit-learn. The most used ones are ``svm.SVC``, ``svm.NuSVC`` and ``svm.Linear
 .. topic:: **Excercise**
    :class: green
 
-   Try classifying the digits dataset with ``svm.SVC``. Leave out the
+   Train an ``svm.SVC`` on the digits dataset. Leave out the
    last 10% and test prediction performance on these observations.
 
 
@@ -237,7 +239,7 @@ Using kernels
 --------------
 
 Classes are not always separable by a hyper-plane, thus it would be
-desirable to a build decision function that is not linear but that may
+desirable to have a decision function that is not linear but that may
 be for instance polynomial or exponential:
 
 
@@ -453,6 +455,13 @@ supervised methods that are not computationally efficient with high
 dimensions.
 
 
+You can also try to visualize the digits dataset ...
+
+And there are manifold learning algorithms that do a better job
+
+.. image:: plot_lle_digits_5.png
+   :scale: 50
+   :align: center
 
 Putting it all together: face recognition
 =========================================
@@ -463,7 +472,7 @@ classification.
 
 .. image:: faces.png
    :align: center
-   :scale: 50
+   :scale: 70
 
 
 .. sourcecode:: python
@@ -514,6 +523,85 @@ Full code: :download:`faces.py`
 
 
 
+============================================================
+Model selection: choosing estimators and their parameters
+============================================================
+
+
+Grid-search and cross-validated estimators
+============================================
+
+Grid-search
+-------------
+
+The scikits.learn provides an object that, given data, computes the score
+during the fit of an estimator on a parameter grid and chooses the
+parameters to maximize the cross-validation score. This object takes an
+estimator during the construction and exposes an estimator API::
+
+    >>> from scikits.learn.grid_search import GridSearchCV
+    >>> gammas = np.logspace(-6, -1, 10)
+    >>> svc = svm.SVC()
+    >>> clf = GridSearchCV(estimator=svc, param_grid=dict(gamma=gammas), 
+    ...                    n_jobs=-1)
+    >>> clf.fit(X_digits[:1000], y_digits[:1000]) # doctest: +ELLIPSIS
+    GridSearchCV(n_jobs=-1, ...)
+    >>> clf.best_score
+    0.98899798001594419
+    >>> clf.best_estimator.gamma
+    0.00059948425031894088
+
+    >>> # Prediction performance on test set is not as good as on train set
+    >>> clf.score(X_digits[1000:], y_digits[1000:])
+    0.96110414052697613
+
+
+By default the `GridSearchCV` uses a 3-fold cross-validation. However, if
+it detects that a classifier is passed, rather than a regressor, it uses
+a stratified 3-fold.
+
+.. topic:: Nested cross-validation
+
+    ::
+
+        >>> cross_val.cross_val_score(clf, X_digits, y_digits)
+
+    Two cross-validation loops are performed in parallel: one by the
+    GridSearchCV estimator to set `gamma`, the other one by
+    `cross_val_score` to measure the prediction performance of the
+    estimator. The resulting scores are unbiased estimates of the
+    prediction score on new data.
+
+
+Cross-validated estimators
+----------------------------
+
+Cross-validation to set a parameter can be done more efficiently on an
+algorithm-by-algorithm basis. This is why, for certain estimators, the
+scikits.learn exposes "CV" estimators, that set their parameter
+automatically by cross-validation::
+
+    >>> from scikits.learn import linear_model, datasets
+    >>> lasso = linear_model.LassoCV()
+    >>> diabetes = datasets.load_diabetes()
+    >>> X_diabetes = diabetes.data
+    >>> y_diabetes = diabetes.target
+    >>> lasso.fit(X_diabetes, y_diabetes)
+    >>> # The estimator chose automatically its lambda:
+    >>> lasso.alpha
+    0.0075421928471338063
+
+These estimators are called similarly to their counterparts, with 'CV'
+appended to their name.
+
+.. topic:: **Exercise**
+   :class: green
+
+   On the diabetes dataset, find the optimal regularization parameter
+   alpha.
+
+
+
 Available in the next release ...
 =================================
 
@@ -532,3 +620,4 @@ dimensionality of many data sets is only artificially high.
 
 
  
+
