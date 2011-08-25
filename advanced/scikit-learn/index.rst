@@ -377,7 +377,7 @@ The simplest clustering algorithm is the k-means.
     tone to several regions of fewer tones)::
 
     >>> import scipy as sp
-    >>> lena = sp.lena()
+    >>> lena = sp.lena().astype(np.float32)
     >>> X = lena.reshape((-1, 1)) # We need an (n_sample, n_feature) array
     >>> k_means = cluster.KMeans(k=5)
     >>> k_means.fit(X)
@@ -421,11 +421,8 @@ Dimension Reduction with Principal Component Analysis
 The cloud of points spanned by the observations above is very flat in
 one direction, so that one feature can almost be exactly computed
 using the 2 other. PCA finds the directions in which the data is not
-*flat*
-
-
-When used to *transform* data, PCA can reduce the dimensionality of the
-data by projecting on a principal subspace.
+*flat* and it can reduce the dimensionality of the data by projecting
+on a subspace.
 
 
 .. warning::
